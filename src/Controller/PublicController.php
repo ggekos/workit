@@ -4,28 +4,45 @@ namespace App\Controller;
 
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use App\Repository\JobRepository;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Doctrine\Common\Persistence\ObjectManager;
+
 
 class PublicController extends Controller
 {
     /**
      * @Route("/job", name="getJob")
      */
-    public function getJob()
+    public function getJob(JobRepository $jobRepository, Request $request, ObjectManager $manager)
     {
-        return $this->render('public/index.html.twig', [
-            'controller_name' => 'PublicController',
-        ]);
+        $worker = $request->headers->get('worker');
+
+        $job = $jobRepository->findAvailable();
+
+        $job->setAssignation($worker);
+        $job->setLastAssignation(new \DateTime());
+
+        $manager->persist($job);
+        $manager->flush();
+
+        $data = [
+            'instruction' => $job->getInstruction()
+        ];
+
+        return new JsonResponse($data);
     }
 
     /**
-     * @Route("/job/{id}", name="udpateJob")
+     * @Route("/job/{id}", name="udpateJob", methods="PUT")
      */
     public function updateJob($id)
     {
-        dump($id);
+        //find job
 
-        return $this->render('public/index.html.twig', [
-            'controller_name' => 'PublicController',
-        ]);
+        //do the thing
+
+        return new JsonResponse($data);
     }
 }
