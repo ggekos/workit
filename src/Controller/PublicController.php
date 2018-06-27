@@ -8,6 +8,7 @@ use App\Repository\JobRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\Common\Persistence\ObjectManager;
+use App\Entity\Solution;
 
 
 class PublicController extends Controller
@@ -15,13 +16,10 @@ class PublicController extends Controller
     /**
      * @Route("/job", name="getJob")
      */
-    public function getJob(JobRepository $jobRepository, Request $request, ObjectManager $manager)
+    public function getJob(JobRepository $jobRepository, ObjectManager $manager)
     {
-        $worker = $request->headers->get('worker');
-
         $job = $jobRepository->findAvailable();
 
-        $job->setAssignation($worker);
         $job->setLastAssignation(new \DateTime());
 
         $manager->persist($job);
@@ -37,12 +35,26 @@ class PublicController extends Controller
     /**
      * @Route("/job/{id}", name="udpateJob", methods="PUT")
      */
-    public function updateJob($id)
+    public function updateJob($id, JobRepository $jobRepository, Request $request, ObjectManager $manager)
     {
         //find job
+        $job = $jobRepository->findOneById($id);
+        $worker = $request->headers->get('worker');
+        $response = $request->request->get('solution');
 
-        //do the thing
+        if (!$job) {
+            dump('prout');
+            die;
+        }
 
-        return new JsonResponse($data);
+        $solution = new Solution();
+        $solution->setJob($job);
+        $solution->setResponse($response);
+        $solution->setWorker($worker);
+
+        $manager->persist($solution);
+        $manager->flush();
+
+        return new JsonResponse();
     }
 }

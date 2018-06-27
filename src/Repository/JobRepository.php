@@ -50,10 +50,14 @@ class JobRepository extends ServiceEntityRepository
 
     public function findAvailable(): ?Job
     {
+        //last assignation vide
+
         return $this->createQueryBuilder('j')
             ->andWhere('j.lastAssignation is NULL')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
+
+        //no response in time
     }
 }
